@@ -54,7 +54,30 @@ class AppState {
         progress = p
     }
 
+    func hasDoneAartiToday() -> Bool {
+        guard let lastAarti = progress.lastAartiDate else { return false }
+        return lastAarti >= lastResetTime()
+    }
+
+    func hasDoneDarshanToday() -> Bool {
+        guard let lastDarshan = progress.lastDarshanDate else { return false }
+        return lastDarshan >= lastResetTime()
+    }
+
+    private func lastResetTime() -> Date {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone.current
+        let now = Date()
+        var comps = cal.dateComponents([.year, .month, .day], from: now)
+        comps.hour = 5
+        comps.minute = 0
+        comps.second = 0
+        guard let today5AM = cal.date(from: comps) else { return now }
+        return now >= today5AM ? today5AM : cal.date(byAdding: .day, value: -1, to: today5AM) ?? now
+    }
+
     func recordDarshan() {
+        guard !hasDoneDarshanToday() else { return }
         var p = progress
         let today = Calendar.current.startOfDay(for: Date())
         if let last = p.lastDarshanDate {
@@ -71,6 +94,16 @@ class AppState {
         p.lastDarshanDate = Date()
         p.totalDarshanCount += 1
         p.punyaPoints += 10
+        updateLevel(&p)
+        progress = p
+    }
+
+    func recordAarti() {
+        guard !hasDoneAartiToday() else { return }
+        var p = progress
+        p.lastAartiDate = Date()
+        p.totalAartiCount += 1
+        p.punyaPoints += 15
         updateLevel(&p)
         progress = p
     }

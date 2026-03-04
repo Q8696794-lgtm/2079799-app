@@ -262,8 +262,13 @@ struct DarshanView: View {
         )
     }
 
+    private var hasDoneDarshanToday: Bool {
+        appState.hasDoneDarshanToday()
+    }
+
     private var darshanButton: some View {
         Button {
+            guard !hasDoneDarshanToday else { return }
             withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
                 darshanCompleted = true
             }
@@ -273,29 +278,35 @@ struct DarshanView: View {
             }
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: "sun.max.fill")
+                Image(systemName: hasDoneDarshanToday ? "checkmark.circle.fill" : "sun.max.fill")
                     .font(.system(size: 20))
-                    .symbolEffect(.pulse, isActive: !darshanCompleted)
+                    .symbolEffect(.pulse, isActive: !darshanCompleted && !hasDoneDarshanToday)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(loc.t(.dailyDarshan))
                         .font(.system(size: 16, weight: .bold))
-                    Text(darshanCompleted ? loc.t(.darshanComplete) : loc.t(.receiveBlessings))
+                    Text(hasDoneDarshanToday ? loc.t(.darshanComplete) : loc.t(.receiveBlessings))
                         .font(.system(size: 12, weight: .medium))
                         .opacity(0.8)
                 }
                 Spacer()
-                Text("+10")
-                    .font(.system(size: 14, weight: .bold))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(.white.opacity(0.15))
-                    .clipShape(Capsule())
+                if hasDoneDarshanToday {
+                    Text(darshanCompletedLabel)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.green)
+                } else {
+                    Text("+10")
+                        .font(.system(size: 14, weight: .bold))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(.white.opacity(0.15))
+                        .clipShape(Capsule())
+                }
             }
-            .foregroundStyle(darshanCompleted ? Color(red: 0.08, green: 0.05, blue: 0.15) : .white)
+            .foregroundStyle((darshanCompleted || hasDoneDarshanToday) ? Color(red: 0.08, green: 0.05, blue: 0.15) : .white)
             .padding(.horizontal, 20)
             .frame(height: 64)
             .background(
-                darshanCompleted
+                (darshanCompleted || hasDoneDarshanToday)
                 ? AnyShapeStyle(LinearGradient(
                     colors: [Color(red: 1, green: 0.9, blue: 0.5), Color(red: 0.85, green: 0.65, blue: 0.2)],
                     startPoint: .leading, endPoint: .trailing
@@ -307,7 +318,20 @@ struct DarshanView: View {
             )
             .clipShape(.rect(cornerRadius: 20))
         }
+        .disabled(hasDoneDarshanToday)
         .sensoryFeedback(.success, trigger: darshanCompleted)
+    }
+
+    private var darshanCompletedLabel: String {
+        switch loc.currentLanguage {
+        case .english: return "Completed"
+        case .chinese: return "已完成"
+        case .hindi: return "पूर्ण"
+        }
+    }
+
+    private var hasAartiToday: Bool {
+        appState.hasDoneAartiToday()
     }
 
     private var aartiButton: some View {
@@ -315,32 +339,49 @@ struct DarshanView: View {
             showAarti = true
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: "flame.fill")
+                Image(systemName: hasAartiToday ? "checkmark.circle.fill" : "flame.fill")
                     .font(.system(size: 20))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(hasAartiToday ? .green : .orange)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(loc.t(.virtualAarti))
                         .font(.system(size: 16, weight: .bold))
-                    Text(loc.t(.lightSacredFlame))
+                    Text(hasAartiToday ? aartiCompletedLabel : loc.t(.lightSacredFlame))
                         .font(.system(size: 12, weight: .medium))
                         .opacity(0.6)
                 }
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .opacity(0.4)
+                if hasAartiToday {
+                    Text("+15")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.green)
+                } else {
+                    Text("+15")
+                        .font(.system(size: 14, weight: .bold))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(.orange.opacity(0.15))
+                        .clipShape(Capsule())
+                }
             }
             .foregroundStyle(.white)
             .padding(.horizontal, 20)
             .frame(height: 64)
             .background(
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(.white.opacity(0.05))
+                    .fill(hasAartiToday ? .orange.opacity(0.08) : .white.opacity(0.05))
                     .overlay(
                         RoundedRectangle(cornerRadius: 20)
-                            .stroke(.orange.opacity(0.2), lineWidth: 0.5)
+                            .stroke(hasAartiToday ? .green.opacity(0.3) : .orange.opacity(0.2), lineWidth: 0.5)
                     )
             )
+        }
+    }
+
+    private var aartiCompletedLabel: String {
+        switch loc.currentLanguage {
+        case .english: return "Today's Aarti completed"
+        case .chinese: return "今日灯祭已完成"
+        case .hindi: return "आज की आरती पूर्ण"
         }
     }
 
@@ -480,9 +521,24 @@ struct DarshanView: View {
 struct AartiView: View {
     let deity: Deity
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppState.self) private var appState
     @Environment(LocalizationService.self) private var loc
     @State private var flameScale: CGFloat = 1.0
     @State private var flameOffset: CGFloat = 0
+    @State private var circleProgress: Double = 0
+    @State private var lastAngle: Double? = nil
+    @State private var totalRotation: Double = 0
+    @State private var aartiCompleted: Bool = false
+    @State private var showReward: Bool = false
+    @State private var glowIntensity: Double = 0.3
+
+    private let requiredRotation: Double = 360 * 3
+    private let goldLight = Color(red: 1, green: 0.85, blue: 0.4)
+    private let goldDark = Color(red: 0.85, green: 0.65, blue: 0.2)
+
+    private var alreadyDoneToday: Bool {
+        appState.hasDoneAartiToday()
+    }
 
     var body: some View {
         NavigationStack {
@@ -490,11 +546,9 @@ struct AartiView: View {
                 Color(red: 0.06, green: 0.04, blue: 0.10)
                     .ignoresSafeArea()
 
-                VStack(spacing: 32) {
-                    Spacer()
-
+                VStack(spacing: 24) {
                     Color.clear
-                        .frame(width: 120, height: 150)
+                        .frame(width: 100, height: 130)
                         .overlay {
                             Image(deity.heroImageAsset)
                                 .resizable()
@@ -502,39 +556,39 @@ struct AartiView: View {
                                 .allowsHitTesting(false)
                         }
                         .clipShape(.rect(cornerRadius: 12))
-                        .shadow(color: deity.primaryColor.opacity(0.5), radius: 20)
+                        .shadow(color: deity.primaryColor.opacity(glowIntensity), radius: 25)
+                        .padding(.top, 16)
 
-                    Text("ॐ")
-                        .font(.system(size: 48))
-                        .foregroundStyle(Color(red: 1, green: 0.85, blue: 0.4))
+                    Text("\(aartiForText) \(deityDisplayName)")
+                        .font(.system(size: 18, weight: .bold, design: .serif))
+                        .foregroundStyle(goldLight)
 
-                    VStack(spacing: 8) {
-                        HStack(spacing: 20) {
-                            flameView
-                            flameView
-                            flameView
-                            flameView
-                            flameView
-                        }
+                    if alreadyDoneToday && !aartiCompleted {
+                        alreadyCompletedView
+                    } else if aartiCompleted {
+                        aartiRewardView
+                    } else {
+                        aartiCircleGesture
+
+                        Text(aartiInstructionText)
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
                     }
 
-                    Text("\(loc.t(.aartiFor)) \(deityDisplayName)")
-                        .font(.system(size: 20, weight: .bold, design: .serif))
-                        .foregroundStyle(Color(red: 1, green: 0.85, blue: 0.4))
-
-                    Text(loc.t(.aartiInstruction))
-                        .font(.system(size: 14, weight: .regular))
-                        .foregroundStyle(.white.opacity(0.5))
-                        .multilineTextAlignment(.center)
-
                     Spacer()
+                }
+
+                if showReward {
+                    rewardOverlay
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(loc.t(.done)) { dismiss() }
-                        .foregroundStyle(Color(red: 1, green: 0.85, blue: 0.4))
+                        .foregroundStyle(goldLight)
                 }
             }
         }
@@ -546,12 +600,164 @@ struct AartiView: View {
         }
     }
 
-    private var deityDisplayName: String {
-        switch loc.currentLanguage {
-        case .english: return deity.nameEnglish
-        case .chinese: return deity.nameChinese
-        case .hindi: return deity.nameHindi
+    private var aartiCircleGesture: some View {
+        ZStack {
+            Circle()
+                .stroke(.white.opacity(0.08), lineWidth: 8)
+                .frame(width: 200, height: 200)
+
+            Circle()
+                .trim(from: 0, to: circleProgress)
+                .stroke(
+                    LinearGradient(colors: [goldLight, .orange, goldDark], startPoint: .topLeading, endPoint: .bottomTrailing),
+                    style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                )
+                .frame(width: 200, height: 200)
+                .rotationEffect(.degrees(-90))
+
+            VStack(spacing: 8) {
+                HStack(spacing: 12) {
+                    flameView
+                    flameView
+                    flameView
+                }
+                Text("\(Int(circleProgress * 100))%")
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundStyle(goldLight)
+                    .contentTransition(.numericText())
+            }
         }
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    let center = CGPoint(x: 100, y: 100)
+                    let dx = value.location.x - center.x
+                    let dy = value.location.y - center.y
+                    let angle = atan2(dy, dx) * 180 / .pi
+
+                    if let last = lastAngle {
+                        var delta = angle - last
+                        if delta > 180 { delta -= 360 }
+                        if delta < -180 { delta += 360 }
+
+                        if delta > 0 {
+                            totalRotation += delta
+                            let newProgress = min(1.0, totalRotation / requiredRotation)
+                            withAnimation(.linear(duration: 0.05)) {
+                                circleProgress = newProgress
+                                glowIntensity = 0.3 + newProgress * 0.7
+                            }
+
+                            if newProgress >= 1.0 && !aartiCompleted {
+                                completeAarti()
+                            }
+                        }
+                    }
+                    lastAngle = angle
+                }
+                .onEnded { _ in
+                    lastAngle = nil
+                }
+        )
+        .sensoryFeedback(.impact(flexibility: .soft, intensity: 0.3), trigger: Int(circleProgress * 10))
+    }
+
+    private func completeAarti() {
+        aartiCompleted = true
+        appState.recordAarti()
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+            showReward = true
+        }
+    }
+
+    private var alreadyCompletedView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(.green)
+                .symbolEffect(.pulse)
+
+            Text(todayAartiDoneText)
+                .font(.system(size: 16, weight: .medium, design: .serif))
+                .foregroundStyle(.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+
+            Text("+15 \(loc.t(.punya))")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(goldLight)
+        }
+        .padding(32)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.white.opacity(0.04))
+        )
+        .padding(.horizontal, 24)
+    }
+
+    private var aartiRewardView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "flame.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(.orange)
+                .symbolEffect(.variableColor.iterative, isActive: true)
+
+            Text(aartiSuccessText)
+                .font(.system(size: 16, weight: .semibold, design: .serif))
+                .foregroundStyle(goldLight)
+                .multilineTextAlignment(.center)
+        }
+        .padding(32)
+    }
+
+    private var rewardOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.8)
+                .ignoresSafeArea()
+
+            VStack(spacing: 24) {
+                Image(systemName: "flame.circle.fill")
+                    .font(.system(size: 64))
+                    .foregroundStyle(
+                        LinearGradient(colors: [goldLight, .orange], startPoint: .top, endPoint: .bottom)
+                    )
+                    .symbolEffect(.bounce, value: showReward)
+
+                Text(aartiCompleteTitle)
+                    .font(.system(size: 24, weight: .bold, design: .serif))
+                    .foregroundStyle(.white)
+
+                Text("+15 \(loc.t(.punya))")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(goldLight)
+
+                Text(aartiCompleteMessage)
+                    .font(.system(size: 14, weight: .regular, design: .serif))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+
+                Button {
+                    dismiss()
+                } label: {
+                    Text(loc.t(.namaste))
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(Color(red: 0.08, green: 0.05, blue: 0.15))
+                        .frame(width: 200, height: 50)
+                        .background(
+                            LinearGradient(
+                                colors: [Color(red: 1, green: 0.9, blue: 0.5), goldDark],
+                                startPoint: .leading, endPoint: .trailing
+                            )
+                        )
+                        .clipShape(.rect(cornerRadius: 25))
+                }
+            }
+        }
+        .transition(.opacity)
+    }
+
+    private var deityDisplayName: String {
+        deity.localizedName(for: loc.currentLanguage)
     }
 
     private var flameView: some View {
@@ -559,5 +765,54 @@ struct AartiView: View {
             .font(.system(size: 36))
             .scaleEffect(flameScale)
             .offset(y: flameOffset)
+    }
+
+    private var aartiForText: String {
+        switch loc.currentLanguage {
+        case .english: return "Aarti for"
+        case .chinese: return "灯祭献给"
+        case .hindi: return "आरती"
+        }
+    }
+
+    private var aartiInstructionText: String {
+        switch loc.currentLanguage {
+        case .english: return "Swipe clockwise around the flame\nto perform the sacred Aarti ritual"
+        case .chinese: return "顺时针滑动火焰周围\n进行神圣的灯祭仪式"
+        case .hindi: return "पवित्र आरती अनुष्ठान करने के लिए\nज्योति के चारों ओर घुमाएं"
+        }
+    }
+
+    private var todayAartiDoneText: String {
+        switch loc.currentLanguage {
+        case .english: return "Today's sacred Aarti has been offered.\nReturn tomorrow for another offering."
+        case .chinese: return "今日的神圣灯祭已完成。\n明日再来供奉。"
+        case .hindi: return "आज की पवित्र आरती अर्पित हो चुकी है।\nकल फिर से आएं।"
+        }
+    }
+
+    private var aartiSuccessText: String {
+        switch loc.currentLanguage {
+        case .english: return "The sacred flame burns bright!"
+        case .chinese: return "神圣之火燃烧光明！"
+        case .hindi: return "पवित्र ज्योति प्रज्वलित है!"
+        }
+    }
+
+    private var aartiCompleteTitle: String {
+        switch loc.currentLanguage {
+        case .english: return "Aarti Complete"
+        case .chinese: return "灯祭完成"
+        case .hindi: return "आरती पूर्ण"
+        }
+    }
+
+    private var aartiCompleteMessage: String {
+        let name = deityDisplayName
+        switch loc.currentLanguage {
+        case .english: return "Your devotion to \(name) has been received.\nMay the sacred flame illuminate your path."
+        case .chinese: return "你对\(name)的虔诚已被接受。\n愿神圣之火照亮你的前路。"
+        case .hindi: return "\(name) के प्रति आपकी भक्ति स्वीकृत हुई।\nपवित्र ज्योति आपके मार्ग को प्रकाशित करे।"
+        }
     }
 }

@@ -20,6 +20,9 @@ struct ProfileView: View {
                         levelProgressCard
                             .padding(.horizontal, 16)
 
+                        dailyActivitySection
+                            .padding(.horizontal, 16)
+
                         selectedDeitiesSection
                             .padding(.horizontal, 16)
 
@@ -97,7 +100,7 @@ struct ProfileView: View {
     }
 
     private var levelProgressCard: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             HStack {
                 Text(loc.t(.devotionProgress))
                     .font(.system(size: 15, weight: .bold, design: .serif))
@@ -127,16 +130,49 @@ struct ProfileView: View {
             .frame(height: 12)
 
             HStack {
-                Text(appState.progress.level.localizedName(for: loc.currentLanguage))
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.5))
-                Spacer()
-                if let nextLevel = nextLevel {
-                    Text(nextLevel.localizedName(for: loc.currentLanguage))
+                HStack(spacing: 4) {
+                    Image(systemName: appState.progress.level.icon)
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color(red: 1, green: 0.85, blue: 0.4))
+                    Text(appState.progress.level.localizedName(for: loc.currentLanguage))
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.5))
                 }
+                Spacer()
+                if let next = nextLevel {
+                    HStack(spacing: 4) {
+                        Text(next.localizedName(for: loc.currentLanguage))
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.5))
+                        Image(systemName: next.icon)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.white.opacity(0.3))
+                    }
+                }
             }
+
+            if let next = nextLevel {
+                let pointsNeeded = punyaForLevel(next) - appState.progress.punyaPoints
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.cyan.opacity(0.7))
+                    Text(pointsToNextLevelText(pointsNeeded))
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.5))
+                }
+            } else {
+                HStack(spacing: 6) {
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color(red: 1, green: 0.85, blue: 0.4))
+                    Text(maxLevelText)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Color(red: 1, green: 0.85, blue: 0.4))
+                }
+            }
+
+            levelMilestonesView
         }
         .padding(20)
         .background(
@@ -147,6 +183,65 @@ struct ProfileView: View {
                         .stroke(Color(red: 0.85, green: 0.65, blue: 0.2).opacity(0.2), lineWidth: 0.5)
                 )
         )
+    }
+
+    private var levelMilestonesView: some View {
+        VStack(spacing: 8) {
+            ForEach(DevotionLevel.allCases, id: \.self) { level in
+                let reached = appState.progress.punyaPoints >= punyaForLevel(level)
+                HStack(spacing: 10) {
+                    Image(systemName: reached ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 14))
+                        .foregroundStyle(reached ? Color(red: 1, green: 0.85, blue: 0.4) : .white.opacity(0.2))
+
+                    Image(systemName: level.icon)
+                        .font(.system(size: 12))
+                        .foregroundStyle(reached ? Color(red: 1, green: 0.85, blue: 0.4) : .white.opacity(0.3))
+                        .frame(width: 20)
+
+                    Text(level.localizedName(for: loc.currentLanguage))
+                        .font(.system(size: 12, weight: reached ? .bold : .medium))
+                        .foregroundStyle(reached ? .white : .white.opacity(0.35))
+
+                    Spacer()
+
+                    Text("\(punyaForLevel(level))")
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .foregroundStyle(reached ? Color(red: 1, green: 0.85, blue: 0.4).opacity(0.7) : .white.opacity(0.2))
+                }
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.white.opacity(0.03))
+        )
+    }
+
+    private func punyaForLevel(_ level: DevotionLevel) -> Int {
+        switch level {
+        case .shishya: return 0
+        case .sadhak: return 500
+        case .upasak: return 2000
+        case .bhakt: return 5000
+        case .paramBhakt: return 15000
+        }
+    }
+
+    private func pointsToNextLevelText(_ points: Int) -> String {
+        switch loc.currentLanguage {
+        case .english: return "\(points) Punya to next level"
+        case .chinese: return "距下一级还需 \(points) 功德"
+        case .hindi: return "अगले स्तर के लिए \(points) पुण्य"
+        }
+    }
+
+    private var maxLevelText: String {
+        switch loc.currentLanguage {
+        case .english: return "Maximum devotion level reached!"
+        case .chinese: return "已达到最高修行等级！"
+        case .hindi: return "अधिकतम भक्ति स्तर प्राप्त!"
+        }
     }
 
     private var nextLevel: DevotionLevel? {
@@ -202,11 +297,13 @@ struct ProfileView: View {
                 .font(.system(size: 15, weight: .bold, design: .serif))
                 .foregroundStyle(Color(red: 1, green: 0.85, blue: 0.4))
 
-            let stats: [(String, String, String)] = [
-                (loc.t(.darshanStreak), "\(appState.progress.dailyDarshanStreak)", "flame.fill"),
-                (loc.t(.totalDarshanLabel), "\(appState.progress.totalDarshanCount)", "eye.fill"),
-                (loc.t(.mantrasChantedLabel), "\(appState.progress.totalMantrasChanted)", "music.note.list"),
-                (loc.t(.malasComplete), "\(appState.progress.totalMantrasChanted / 108)", "circle.hexagongrid.fill"),
+            let stats: [(String, String, String, Color)] = [
+                (loc.t(.darshanStreak), "\(appState.progress.dailyDarshanStreak)", "flame.fill", .orange),
+                (loc.t(.totalDarshanLabel), "\(appState.progress.totalDarshanCount)", "eye.fill", .blue),
+                (loc.t(.mantrasChantedLabel), "\(appState.progress.totalMantrasChanted)", "music.note.list", .purple),
+                (loc.t(.malasComplete), "\(appState.progress.totalMantrasChanted / 108)", "circle.hexagongrid.fill", .cyan),
+                (totalAartiLabel, "\(appState.progress.totalAartiCount)", "flame.circle.fill", .orange),
+                (totalPunyaLabel, "\(appState.progress.punyaPoints)", "sparkles", Color(red: 1, green: 0.85, blue: 0.4)),
             ]
 
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
@@ -214,7 +311,7 @@ struct ProfileView: View {
                     VStack(spacing: 8) {
                         Image(systemName: stat.2)
                             .font(.system(size: 20))
-                            .foregroundStyle(Color(red: 1, green: 0.85, blue: 0.4))
+                            .foregroundStyle(stat.3)
                         Text(stat.1)
                             .font(.system(size: 18, weight: .bold))
                             .foregroundStyle(.white)
@@ -233,6 +330,22 @@ struct ProfileView: View {
         }
     }
 
+    private var totalAartiLabel: String {
+        switch loc.currentLanguage {
+        case .english: return "Total Aarti"
+        case .chinese: return "灯祭次数"
+        case .hindi: return "कुल आरती"
+        }
+    }
+
+    private var totalPunyaLabel: String {
+        switch loc.currentLanguage {
+        case .english: return "Total Punya"
+        case .chinese: return "总功德"
+        case .hindi: return "कुल पुण्य"
+        }
+    }
+
     private var achievementsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(loc.t(.achievements))
@@ -244,8 +357,11 @@ struct ProfileView: View {
                 (loc.t(.sevenDayStreak), "flame.fill", appState.progress.dailyDarshanStreak >= 7),
                 (loc.t(.mantras108), "music.note", appState.progress.totalMantrasChanted >= 108),
                 (loc.t(.mantras1000), "music.note.list", appState.progress.totalMantrasChanted >= 1000),
+                (firstAartiLabel, "flame.circle.fill", appState.progress.totalAartiCount >= 1),
                 (loc.t(.sadhakLevel), "flame.fill", appState.progress.level.rawValue != "Shishya"),
                 (loc.t(.thirtyDayStreak), "flame.fill", appState.progress.dailyDarshanStreak >= 30),
+                (aarti10Label, "flame.circle.fill", appState.progress.totalAartiCount >= 10),
+                (punya1000Label, "sparkles", appState.progress.punyaPoints >= 1000),
             ]
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
@@ -271,6 +387,95 @@ struct ProfileView: View {
                     )
                 }
             }
+        }
+    }
+
+    private var dailyActivitySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(todayActivityTitle)
+                .font(.system(size: 15, weight: .bold, design: .serif))
+                .foregroundStyle(Color(red: 1, green: 0.85, blue: 0.4))
+
+            HStack(spacing: 12) {
+                dailyActivityItem(
+                    icon: appState.hasDoneDarshanToday() ? "checkmark.circle.fill" : "circle",
+                    title: loc.t(.dailyDarshan),
+                    subtitle: "+10",
+                    done: appState.hasDoneDarshanToday(),
+                    color: .blue
+                )
+                dailyActivityItem(
+                    icon: appState.hasDoneAartiToday() ? "checkmark.circle.fill" : "circle",
+                    title: loc.t(.virtualAarti),
+                    subtitle: "+15",
+                    done: appState.hasDoneAartiToday(),
+                    color: .orange
+                )
+            }
+        }
+    }
+
+    private func dailyActivityItem(icon: String, title: String, subtitle: String, done: Bool, color: Color) -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 24))
+                .foregroundStyle(done ? .green : .white.opacity(0.2))
+            Text(title)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(done ? .white : .white.opacity(0.4))
+            Text(done ? doneLabel : subtitle)
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(done ? .green : color.opacity(0.7))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(done ? color.opacity(0.08) : .white.opacity(0.03))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(done ? .green.opacity(0.3) : .white.opacity(0.05), lineWidth: 0.5)
+                )
+        )
+    }
+
+    private var todayActivityTitle: String {
+        switch loc.currentLanguage {
+        case .english: return "Today's Practice"
+        case .chinese: return "今日修行"
+        case .hindi: return "आज की साधना"
+        }
+    }
+
+    private var doneLabel: String {
+        switch loc.currentLanguage {
+        case .english: return "Done"
+        case .chinese: return "已完成"
+        case .hindi: return "पूर्ण"
+        }
+    }
+
+    private var firstAartiLabel: String {
+        switch loc.currentLanguage {
+        case .english: return "First Aarti"
+        case .chinese: return "首次灯祭"
+        case .hindi: return "प्रथम आरती"
+        }
+    }
+
+    private var aarti10Label: String {
+        switch loc.currentLanguage {
+        case .english: return "10 Aartis"
+        case .chinese: return "10次灯祭"
+        case .hindi: return "10 आरती"
+        }
+    }
+
+    private var punya1000Label: String {
+        switch loc.currentLanguage {
+        case .english: return "1000 Punya"
+        case .chinese: return "1000功德"
+        case .hindi: return "1000 पुण्य"
         }
     }
 
