@@ -11,7 +11,6 @@ struct ContentView: View {
                 Color(red: 0.06, green: 0.04, blue: 0.12)
                     .ignoresSafeArea()
                     .onAppear {
-                        ImageCacheService.shared.preloadImages(urls: Deity.allDeities.map(\.heroImageURL))
                         determineScreen()
                     }
 

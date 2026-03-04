@@ -151,7 +151,9 @@ struct DivinationView: View {
                             Color.clear
                                 .frame(width: 24, height: 30)
                                 .overlay {
-                                    CachedAsyncImage(url: deity.heroImageURL)
+                                    Image(deity.heroImageAsset)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
                                         .allowsHitTesting(false)
                                 }
                                 .clipShape(.rect(cornerRadius: 4))
@@ -194,7 +196,9 @@ struct DivinationView: View {
                 Color.clear
                     .frame(width: 100, height: 130)
                     .overlay {
-                        CachedAsyncImage(url: currentDeity.heroImageURL)
+                        Image(currentDeity.heroImageAsset)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
                             .allowsHitTesting(false)
                     }
                     .clipShape(.rect(cornerRadius: 12))
@@ -870,7 +874,9 @@ struct DivinationView: View {
                     Color.clear
                         .frame(width: 55, height: 70)
                         .overlay {
-                            CachedAsyncImage(url: currentDeity.heroImageURL)
+                            Image(currentDeity.heroImageAsset)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
                                 .allowsHitTesting(false)
                         }
                         .clipShape(.rect(cornerRadius: 6))

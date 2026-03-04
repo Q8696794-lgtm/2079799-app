@@ -72,7 +72,7 @@ struct DeitySelectionView: View {
             }
         }
         .onAppear {
-            ImageCacheService.shared.preloadImages(urls: Deity.allDeities.map(\.heroImageURL))
+
             withAnimation(.easeOut(duration: 0.6)) { appeared = true }
             withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true)) {
                 particlePhase = true
@@ -335,7 +335,9 @@ struct DeitySelectionView: View {
                             Color(red: 0.1, green: 0.07, blue: 0.18)
                                 .frame(width: 52, height: 65)
                                 .overlay {
-                                    CachedAsyncImage(url: deity.heroImageURL)
+                                    Image(deity.heroImageAsset)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
                                         .allowsHitTesting(false)
                                 }
                                 .clipShape(.rect(cornerRadius: 8))
@@ -578,7 +580,9 @@ struct DeityImageCardView: View {
         Color(red: 0.08, green: 0.06, blue: 0.15)
             .aspectRatio(0.75, contentMode: .fit)
             .overlay {
-                CachedAsyncImage(url: deity.heroImageURL)
+                Image(deity.heroImageAsset)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
                     .allowsHitTesting(false)
             }
             .overlay(alignment: .bottom) {

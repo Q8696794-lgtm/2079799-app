@@ -142,7 +142,9 @@ struct DarshanView: View {
                     Color.clear
                         .frame(width: 160, height: 200)
                         .overlay {
-                            CachedAsyncImage(url: deity.heroImageURL)
+                            Image(deity.heroImageAsset)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
                                 .allowsHitTesting(false)
                         }
                         .clipShape(.rect(cornerRadius: 16))
@@ -199,7 +201,9 @@ struct DarshanView: View {
                             Color.clear
                                 .frame(width: 36, height: 44)
                                 .overlay {
-                                    CachedAsyncImage(url: deity.heroImageURL)
+                                    Image(deity.heroImageAsset)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
                                         .allowsHitTesting(false)
                                 }
                                 .clipShape(.rect(cornerRadius: 8))
@@ -387,7 +391,9 @@ struct DarshanView: View {
                         Color.clear
                             .frame(width: 36, height: 44)
                             .overlay {
-                                CachedAsyncImage(url: deity.heroImageURL)
+                                Image(deity.heroImageAsset)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
                                     .allowsHitTesting(false)
                             }
                             .clipShape(.rect(cornerRadius: 8))
@@ -490,7 +496,9 @@ struct AartiView: View {
                     Color.clear
                         .frame(width: 120, height: 150)
                         .overlay {
-                            CachedAsyncImage(url: deity.heroImageURL)
+                            Image(deity.heroImageAsset)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
                                 .allowsHitTesting(false)
                         }
                         .clipShape(.rect(cornerRadius: 12))

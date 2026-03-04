@@ -32,6 +32,7 @@ nonisolated struct Deity: Identifiable, Sendable {
     let offeringEN: String
     let offeringZH: String
     let offeringHI: String
+    let heroImageAsset: String
     let heroImageURL: URL?
     let mantras: [Mantra]
     let cardDivination: [DivinationCard]
@@ -89,7 +90,8 @@ nonisolated struct Deity: Identifiable, Sendable {
             offeringEN: "Bilva Leaves",
             offeringZH: "比尔瓦叶",
             offeringHI: "बिल्व पत्र",
-            heroImageURL: URL(string: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/4zkjn9s853xq3bwjn8wct"),
+            heroImageAsset: "shiva_hero",
+            heroImageURL: URL(string: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/etzhf06gjcntqedskhw2d"),
             mantras: Mantra.shivaMantras,
             cardDivination: DivinationCard.allCards(for: .shiva)
         ),
@@ -113,7 +115,8 @@ nonisolated struct Deity: Identifiable, Sendable {
             offeringEN: "Sindoor & Jasmine",
             offeringZH: "朱砂与茉莉",
             offeringHI: "सिंदूर और चमेली",
-            heroImageURL: URL(string: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/w72xumxf8167kn8msd9t9"),
+            heroImageAsset: "hanuman_hero",
+            heroImageURL: URL(string: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/5n0fc3xim1rhp6b8nqs45"),
             mantras: Mantra.hanumanMantras,
             cardDivination: DivinationCard.allCards(for: .hanuman)
         ),
@@ -137,7 +140,8 @@ nonisolated struct Deity: Identifiable, Sendable {
             offeringEN: "Modak & Durva Grass",
             offeringZH: "莫达克甜点与杜瓦草",
             offeringHI: "मोदक और दूर्वा घास",
-            heroImageURL: URL(string: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/96yjpxuinz0mvcn394lnv"),
+            heroImageAsset: "ganesha_hero",
+            heroImageURL: URL(string: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/lm8ye2utotsjm3pnf6mmh"),
             mantras: Mantra.ganeshaMantras,
             cardDivination: DivinationCard.allCards(for: .ganesha)
         ),
@@ -161,7 +165,8 @@ nonisolated struct Deity: Identifiable, Sendable {
             offeringEN: "Lotus & Red Flowers",
             offeringZH: "莲花与红色花朵",
             offeringHI: "कमल और लाल फूल",
-            heroImageURL: URL(string: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/nykc1xm3cxsms33nbevlp"),
+            heroImageAsset: "lakshmi_hero",
+            heroImageURL: URL(string: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/oyje0veyrzl6ym4w8z7c3"),
             mantras: Mantra.lakshmiMantras,
             cardDivination: DivinationCard.allCards(for: .lakshmi)
         ),
@@ -185,7 +190,8 @@ nonisolated struct Deity: Identifiable, Sendable {
             offeringEN: "Tulsi Leaves",
             offeringZH: "圣罗勒叶",
             offeringHI: "तुलसी पत्र",
-            heroImageURL: URL(string: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/yw5xcbn28j5y55j7jnjbg"),
+            heroImageAsset: "rama_hero",
+            heroImageURL: URL(string: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/7eb61h106fqed6uc5chs8"),
             mantras: Mantra.ramaMantras,
             cardDivination: DivinationCard.allCards(for: .rama)
         ),
@@ -209,7 +215,8 @@ nonisolated struct Deity: Identifiable, Sendable {
             offeringEN: "Tulsi & Butter",
             offeringZH: "圣罗勒与黄油",
             offeringHI: "तुलसी और मक्खन",
-            heroImageURL: URL(string: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/dv0ioyyrk2tfaz7zduffi"),
+            heroImageAsset: "krishna_hero",
+            heroImageURL: URL(string: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/ndjuyf22c6t001z1cu9c1"),
             mantras: Mantra.krishnaMantras,
             cardDivination: DivinationCard.allCards(for: .krishna)
         ),
@@ -233,7 +240,8 @@ nonisolated struct Deity: Identifiable, Sendable {
             offeringEN: "Tulsi & Yellow Flowers",
             offeringZH: "圣罗勒与黄色花朵",
             offeringHI: "तुलसी और पीले फूल",
-            heroImageURL: URL(string: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/gvu6rdthghetkn6apmpuk"),
+            heroImageAsset: "vishnu_hero",
+            heroImageURL: URL(string: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/bgqnf1xbnelpekjn8fspj"),
             mantras: Mantra.vishnuMantras,
             cardDivination: DivinationCard.allCards(for: .vishnu)
         ),
