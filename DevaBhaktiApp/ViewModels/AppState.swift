@@ -4,18 +4,12 @@ import SwiftUI
 @MainActor
 class AppState {
     var hasCompletedOnboarding: Bool {
-        get { UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") }
-        set { UserDefaults.standard.set(newValue, forKey: "hasCompletedOnboarding") }
+        didSet { UserDefaults.standard.set(hasCompletedOnboarding, forKey: "hasCompletedOnboarding") }
     }
 
     var selectedDeityIDs: [DeityID] {
-        get {
-            guard let data = UserDefaults.standard.data(forKey: "selectedDeityIDs"),
-                  let ids = try? JSONDecoder().decode([DeityID].self, from: data) else { return [] }
-            return ids
-        }
-        set {
-            if let data = try? JSONEncoder().encode(newValue) {
+        didSet {
+            if let data = try? JSONEncoder().encode(selectedDeityIDs) {
                 UserDefaults.standard.set(data, forKey: "selectedDeityIDs")
             }
         }
@@ -30,15 +24,28 @@ class AppState {
     }
 
     var progress: UserProgress {
-        get {
-            guard let data = UserDefaults.standard.data(forKey: "userProgress"),
-                  let p = try? JSONDecoder().decode(UserProgress.self, from: data) else { return UserProgress() }
-            return p
-        }
-        set {
-            if let data = try? JSONEncoder().encode(newValue) {
+        didSet {
+            if let data = try? JSONEncoder().encode(progress) {
                 UserDefaults.standard.set(data, forKey: "userProgress")
             }
+        }
+    }
+
+    init() {
+        self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+
+        if let data = UserDefaults.standard.data(forKey: "selectedDeityIDs"),
+           let ids = try? JSONDecoder().decode([DeityID].self, from: data) {
+            self.selectedDeityIDs = ids
+        } else {
+            self.selectedDeityIDs = []
+        }
+
+        if let data = UserDefaults.standard.data(forKey: "userProgress"),
+           let p = try? JSONDecoder().decode(UserProgress.self, from: data) {
+            self.progress = p
+        } else {
+            self.progress = UserProgress()
         }
     }
 
