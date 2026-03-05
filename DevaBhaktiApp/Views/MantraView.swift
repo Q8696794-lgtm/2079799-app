@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 struct MantraView: View {
     @Environment(AppState.self) private var appState
@@ -159,8 +160,13 @@ struct MalaChantingView: View {
     @State private var isChanting = false
     @State private var beadPulse = false
     @State private var showCompletion = false
+    @State private var lastTapTime: Date = .distantPast
+    @State private var cooldownActive = false
+    @State private var hasPlayedSpeech = false
+    @State private var synthesizer = AVSpeechSynthesizer()
 
     private let totalBeads = 108
+    private let cooldownInterval: TimeInterval = 1.0
     private let beadColumns = [GridItem](repeating: GridItem(.flexible(), spacing: 4), count: 9)
 
     var body: some View {
@@ -238,15 +244,36 @@ struct MalaChantingView: View {
         }
     }
 
+    private func playMantraSpeech() {
+        let utterance = AVSpeechUtterance(string: mantra.transliteration)
+        utterance.voice = AVSpeechSynthesisVoice(language: "hi-IN") ?? AVSpeechSynthesisVoice(language: "en-IN")
+        utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 0.8
+        utterance.pitchMultiplier = 1.0
+        synthesizer.speak(utterance)
+    }
+
     private var chantButton: some View {
         Button {
             guard count < totalBeads else { return }
+            let now = Date()
+            guard now.timeIntervalSince(lastTapTime) >= cooldownInterval else { return }
+            lastTapTime = now
+
+            if !hasPlayedSpeech {
+                hasPlayedSpeech = true
+                playMantraSpeech()
+            }
+
             withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
                 count += 1
                 beadPulse = true
+                cooldownActive = true
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 beadPulse = false
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + cooldownInterval) {
+                cooldownActive = false
             }
             if count >= totalBeads {
                 withAnimation(.spring) { showCompletion = true }
@@ -271,6 +298,7 @@ struct MalaChantingView: View {
                         .tracking(2)
                 }
                 .foregroundStyle(Color(red: 0.08, green: 0.05, blue: 0.15))
+                .opacity(cooldownActive ? 0.5 : 1.0)
             }
         }
         .sensoryFeedback(.impact(flexibility: .soft), trigger: count)
@@ -296,7 +324,7 @@ struct MalaChantingView: View {
                     .foregroundStyle(.white.opacity(0.6))
                     .multilineTextAlignment(.center)
 
-                Text("+108 \(loc.t(.punya))")
+                Text("+1 \(loc.t(.punya))")
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(Color(red: 1, green: 0.85, blue: 0.4))
 

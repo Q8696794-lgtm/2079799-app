@@ -117,8 +117,13 @@ class AppState {
 
     func recordMantraChant(count: Int) {
         var p = progress
+        let oldMalas = p.totalMantrasChanted / 108
         p.totalMantrasChanted += count
-        p.punyaPoints += count
+        let newMalas = p.totalMantrasChanted / 108
+        let earnedPunya = newMalas - oldMalas
+        if earnedPunya > 0 {
+            p.punyaPoints += earnedPunya
+        }
         updateLevel(&p)
         progress = p
     }
