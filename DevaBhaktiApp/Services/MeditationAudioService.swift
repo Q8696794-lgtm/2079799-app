@@ -1,4 +1,5 @@
 import AVFoundation
+import UIKit
 
 @Observable
 @MainActor
@@ -97,6 +98,7 @@ class MeditationAudioService {
             eng.prepare()
             try eng.start()
             isPlaying = true
+            UIApplication.shared.isIdleTimerDisabled = true
         } catch {
             return
         }
@@ -124,6 +126,7 @@ class MeditationAudioService {
         sourceNode1 = nil
         sourceNode2 = nil
         isPlaying = false
+        UIApplication.shared.isIdleTimerDisabled = false
     }
 
     func togglePlayPause() {
@@ -133,10 +136,12 @@ class MeditationAudioService {
             timer?.invalidate()
             timer = nil
             isPlaying = false
+            UIApplication.shared.isIdleTimerDisabled = false
         } else {
             do {
                 try eng.start()
                 isPlaying = true
+                UIApplication.shared.isIdleTimerDisabled = true
                 timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
                     Task { @MainActor in
                         guard let self else { return }

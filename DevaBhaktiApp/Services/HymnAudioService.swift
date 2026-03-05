@@ -1,4 +1,5 @@
 import AVFoundation
+import UIKit
 
 @Observable
 @MainActor
@@ -68,11 +69,13 @@ class HymnAudioService {
                 self?.isPlaying = false
                 self?.currentTime = 0
                 self?.player?.seek(to: .zero)
+                UIApplication.shared.isIdleTimerDisabled = false
             }
         }
 
         avPlayer.play()
         isPlaying = true
+        UIApplication.shared.isIdleTimerDisabled = true
         isLoading = false
     }
 
@@ -81,9 +84,11 @@ class HymnAudioService {
         if isPlaying {
             player.pause()
             isPlaying = false
+            UIApplication.shared.isIdleTimerDisabled = false
         } else {
             player.play()
             isPlaying = true
+            UIApplication.shared.isIdleTimerDisabled = true
         }
     }
 
@@ -101,6 +106,7 @@ class HymnAudioService {
         player?.pause()
         player = nil
         isPlaying = false
+        UIApplication.shared.isIdleTimerDisabled = false
         currentTime = 0
         duration = 0
         isLoading = false
