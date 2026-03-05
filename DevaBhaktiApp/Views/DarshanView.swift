@@ -5,6 +5,7 @@ struct DarshanView: View {
     @Environment(LocalizationService.self) private var loc
     @State private var selectedDeityIndex: Int = 0
     @State private var showAarti = false
+    @State private var showMeditation = false
     @State private var flamePhase = false
     @State private var darshanCompleted = false
     @State private var particlePhase = false
@@ -41,6 +42,10 @@ struct DarshanView: View {
 
                         aartiButton
                             .padding(.horizontal, 24)
+                            .padding(.bottom, 20)
+
+                        meditationButton
+                            .padding(.horizontal, 24)
                             .padding(.bottom, 24)
 
                         if appState.selectedDeities.count > 1 {
@@ -71,6 +76,9 @@ struct DarshanView: View {
             }
             .sheet(isPresented: $showAarti) {
                 AartiView(deity: currentDeity ?? Deity.allDeities[0])
+            }
+            .sheet(isPresented: $showMeditation) {
+                MeditationListView(deity: currentDeity ?? Deity.allDeities[0])
             }
         }
     }
@@ -374,6 +382,56 @@ struct DarshanView: View {
                             .stroke(hasAartiToday ? .green.opacity(0.3) : .orange.opacity(0.2), lineWidth: 0.5)
                     )
             )
+        }
+    }
+
+    private var meditationButton: some View {
+        Button {
+            showMeditation = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "brain.head.profile.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(.purple)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(meditationTitle)
+                        .font(.system(size: 16, weight: .bold))
+                    Text(meditationSubtitle)
+                        .font(.system(size: 12, weight: .medium))
+                        .opacity(0.6)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.3))
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 20)
+            .frame(height: 64)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(.white.opacity(0.05))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(.purple.opacity(0.2), lineWidth: 0.5)
+                    )
+            )
+        }
+    }
+
+    private var meditationTitle: String {
+        switch loc.currentLanguage {
+        case .english: return "Meditation & Prayer"
+        case .chinese: return "冥想与祈祷"
+        case .hindi: return "ध्यान और प्रार्थना"
+        }
+    }
+
+    private var meditationSubtitle: String {
+        switch loc.currentLanguage {
+        case .english: return "Sacred sounds for inner peace"
+        case .chinese: return "内心平静的神圣之音"
+        case .hindi: return "आंतरिक शांति के पवित्र स्वर"
         }
     }
 
