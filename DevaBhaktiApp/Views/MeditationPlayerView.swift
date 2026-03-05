@@ -5,7 +5,10 @@ struct MeditationPlayerView: View {
     let deity: Deity
     @Environment(\.dismiss) private var dismiss
     @Environment(LocalizationService.self) private var loc
+    @Environment(AppState.self) private var appState
     @State private var audioService = MeditationAudioService()
+    @State private var lastAwardedMinute: Int = 0
+    @State private var meritEarned: Int = 0
     @State private var breatheIn = false
     @State private var showCompletion = false
     @State private var pulsePhase = false
@@ -63,9 +66,19 @@ struct MeditationPlayerView: View {
         }
         .onChange(of: audioService.isPlaying) { _, newValue in
             if !newValue && audioService.elapsedSeconds >= audioService.totalSeconds && audioService.totalSeconds > 0 {
+                awardMeditationMerit()
                 withAnimation(.spring(response: 0.5)) {
                     showCompletion = true
                 }
+            }
+        }
+        .onChange(of: audioService.elapsedSeconds) { _, newValue in
+            let currentMinute = newValue / 60
+            if currentMinute > lastAwardedMinute && currentMinute % 10 == 0 {
+                let minutesToAward = currentMinute - lastAwardedMinute
+                appState.recordMeditationTime(minutes: minutesToAward)
+                meritEarned += (minutesToAward / 10) * 2
+                lastAwardedMinute = currentMinute
             }
         }
     }
@@ -261,6 +274,17 @@ struct MeditationPlayerView: View {
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(goldLight)
 
+                if meritEarned > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 14))
+                        Text("+\(meritEarned) \(punyaLabel)")
+                            .font(.system(size: 14, weight: .bold))
+                    }
+                    .foregroundStyle(.yellow)
+                    .padding(.top, 4)
+                }
+
                 Text(meditationCompleteMessage)
                     .font(.system(size: 14, weight: .regular, design: .serif))
                     .foregroundStyle(.white.opacity(0.6))
@@ -286,6 +310,15 @@ struct MeditationPlayerView: View {
             }
         }
         .transition(.opacity)
+    }
+
+    private func awardMeditationMerit() {
+        let totalMinutes = audioService.elapsedSeconds / 60
+        let remainingMinutes = totalMinutes - lastAwardedMinute
+        if remainingMinutes > 0 {
+            appState.recordMeditationTime(minutes: remainingMinutes)
+            meritEarned += (remainingMinutes / 10) * 2
+        }
     }
 
     private func startBreathingAnimation() {
@@ -334,6 +367,14 @@ struct MeditationPlayerView: View {
         case .english: return "Meditation Complete"
         case .chinese: return "冥想完成"
         case .hindi: return "ध्यान पूर्ण"
+        }
+    }
+
+    private var punyaLabel: String {
+        switch loc.currentLanguage {
+        case .english: return "Punya"
+        case .chinese: return "功德"
+        case .hindi: return "पुण्य"
         }
     }
 

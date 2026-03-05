@@ -8,6 +8,8 @@ nonisolated struct UserProgress: Codable, Sendable {
     var totalDarshanCount: Int = 0
     var totalAartiCount: Int = 0
     var lastAartiDate: Date?
+    var totalMeditationMinutes: Int = 0
+    var meditationPunyaAwarded: Int = 0
     var level: DevotionLevel = .shishya
     var achievements: [String] = []
 

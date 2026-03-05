@@ -115,6 +115,19 @@ class AppState {
         progress = p
     }
 
+    func recordMeditationTime(minutes: Int) {
+        var p = progress
+        p.totalMeditationMinutes += minutes
+        let totalEarned = (p.totalMeditationMinutes / 10) * 2
+        let newPunya = totalEarned - p.meditationPunyaAwarded
+        if newPunya > 0 {
+            p.punyaPoints += newPunya
+            p.meditationPunyaAwarded = totalEarned
+        }
+        updateLevel(&p)
+        progress = p
+    }
+
     func recordMantraChant(count: Int) {
         var p = progress
         let oldMalas = p.totalMantrasChanted / 108

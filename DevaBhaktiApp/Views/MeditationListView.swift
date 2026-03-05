@@ -1,10 +1,14 @@
 import SwiftUI
 
+nonisolated enum MeditationNavDestination: Hashable {
+    case meditation(String)
+    case hymn(String)
+}
+
 struct MeditationListView: View {
     let deity: Deity
     @Environment(\.dismiss) private var dismiss
     @Environment(LocalizationService.self) private var loc
-    @State private var selectedTrack: MeditationTrack?
     @State private var glowPhase = false
 
     private let goldLight = Color(red: 1, green: 0.85, blue: 0.4)
@@ -12,6 +16,10 @@ struct MeditationListView: View {
 
     private var tracks: [MeditationTrack] {
         MeditationTrack.tracks(for: deity.id)
+    }
+
+    private var hymns: [HymnTrack] {
+        HymnTrack.hymns(for: deity.id)
     }
 
     var body: some View {
@@ -25,15 +33,41 @@ struct MeditationListView: View {
                         deityMeditationHeader
                             .padding(.bottom, 28)
 
+                        sectionHeader(
+                            icon: "waveform.path",
+                            title: meditationSectionTitle
+                        )
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 12)
+
                         VStack(spacing: 14) {
                             ForEach(tracks) { track in
-                                NavigationLink(value: track.id) {
+                                NavigationLink(value: MeditationNavDestination.meditation(track.id)) {
                                     trackCard(track)
                                 }
                             }
                         }
                         .padding(.horizontal, 16)
-                        .padding(.bottom, 40)
+                        .padding(.bottom, 32)
+
+                        if !hymns.isEmpty {
+                            sectionHeader(
+                                icon: "music.quarternote.3",
+                                title: hymnSectionTitle
+                            )
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 12)
+
+                            VStack(spacing: 14) {
+                                ForEach(hymns) { hymn in
+                                    NavigationLink(value: MeditationNavDestination.hymn(hymn.id)) {
+                                        hymnCard(hymn)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 32)
+                        }
 
                         meditationTip
                             .padding(.horizontal, 16)
@@ -54,11 +88,32 @@ struct MeditationListView: View {
                         .foregroundStyle(goldLight)
                 }
             }
-            .navigationDestination(for: String.self) { trackID in
-                if let track = tracks.first(where: { $0.id == trackID }) {
-                    MeditationPlayerView(track: track, deity: deity)
+            .navigationDestination(for: MeditationNavDestination.self) { dest in
+                switch dest {
+                case .meditation(let trackID):
+                    if let track = tracks.first(where: { $0.id == trackID }) {
+                        MeditationPlayerView(track: track, deity: deity)
+                    }
+                case .hymn(let hymnID):
+                    if let hymn = hymns.first(where: { $0.id == hymnID }) {
+                        HymnPlayerView(hymn: hymn, deity: deity)
+                    }
                 }
             }
+        }
+    }
+
+    private func sectionHeader(icon: String, title: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundStyle(goldDark)
+
+            Text(title)
+                .font(.system(size: 16, weight: .bold, design: .serif))
+                .foregroundStyle(goldLight)
+
+            VStack { Divider().background(goldDark.opacity(0.2)) }
         }
     }
 
@@ -173,6 +228,49 @@ struct MeditationListView: View {
         )
     }
 
+    private func hymnCard(_ hymn: HymnTrack) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: hymn.icon)
+                .font(.system(size: 22))
+                .foregroundStyle(.orange)
+                .frame(width: 48, height: 48)
+                .background(
+                    LinearGradient(
+                        colors: [.orange.opacity(0.2), deity.primaryColor.opacity(0.15)],
+                        startPoint: .topLeading, endPoint: .bottomTrailing
+                    )
+                )
+                .clipShape(.rect(cornerRadius: 14))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(hymn.localizedName(for: loc.currentLanguage))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+
+                Text(hymn.localizedDesc(for: loc.currentLanguage))
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundStyle(.white.opacity(0.45))
+                    .lineLimit(2)
+            }
+
+            Spacer()
+
+            Image(systemName: "play.circle.fill")
+                .font(.system(size: 28))
+                .foregroundStyle(.orange.opacity(0.7))
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(.white.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18)
+                        .stroke(.orange.opacity(0.1), lineWidth: 0.5)
+                )
+        )
+    }
+
     private var meditationTip: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
@@ -205,6 +303,22 @@ struct MeditationListView: View {
         case .english: return "Meditation & Prayer"
         case .chinese: return "冥想与祈祷"
         case .hindi: return "ध्यान और प्रार्थना"
+        }
+    }
+
+    private var meditationSectionTitle: String {
+        switch loc.currentLanguage {
+        case .english: return "Meditation"
+        case .chinese: return "冥想"
+        case .hindi: return "ध्यान"
+        }
+    }
+
+    private var hymnSectionTitle: String {
+        switch loc.currentLanguage {
+        case .english: return "Hymns"
+        case .chinese: return "赞歌"
+        case .hindi: return "भजन"
         }
     }
 
