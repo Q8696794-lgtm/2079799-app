@@ -10,7 +10,7 @@ class CloudKitFollowerService {
     private var container: CKContainer?
     private var publicDB: CKDatabase? { container?.publicCloudDatabase }
     private let recordType = "DeityFollowerCount"
-    private var isAvailable = true
+    private var isAvailable = false
 
     private var reportedDeityIDs: Set<String> {
         get {
@@ -23,10 +23,9 @@ class CloudKitFollowerService {
     }
 
     init() {
-        do {
-            let c = CKContainer(identifier: "iCloud.app.rork.deva-bhakti-app")
-            self.container = c
-        }
+        let c = CKContainer(identifier: "iCloud.app.rork.deva-bhakti-app")
+        self.container = c
+        self.isAvailable = true
     }
 
     func fetchAllCounts() async {
@@ -35,6 +34,12 @@ class CloudKitFollowerService {
             return
         }
         do {
+            let status = try await container!.accountStatus()
+            guard status == .available else {
+                isAvailable = false
+                isLoaded = true
+                return
+            }
             let predicate = NSPredicate(value: true)
             let query = CKQuery(recordType: recordType, predicate: predicate)
             let (results, _) = try await db.records(matching: query, resultsLimit: 20)
