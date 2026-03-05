@@ -11,6 +11,9 @@ struct DevaBhaktiAppApp: App {
                 .environment(appState)
                 .environment(localizationService)
                 .preferredColorScheme(.dark)
+                .onAppear {
+                    appState.loadFollowerCounts()
+                }
         }
     }
 }

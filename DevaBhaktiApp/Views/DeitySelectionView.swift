@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DeitySelectionView: View {
     let onConfirm: ([DeityID]) -> Void
+    @Environment(AppState.self) private var appState
     @Environment(LocalizationService.self) private var loc
     @State private var selectedIDs: [DeityID] = []
     @State private var appeared = false
@@ -44,7 +45,8 @@ struct DeitySelectionView: View {
                                 isShaking: shakingID == deity.id,
                                 appeared: appeared,
                                 appearDelay: Double(index) * 0.06,
-                                language: loc.currentLanguage
+                                language: loc.currentLanguage,
+                                realFollowerCount: appState.followerCount(for: deity.id)
                             ) {
                                 handleSelection(deity.id)
                             }
@@ -461,6 +463,7 @@ struct DeityImageCardView: View {
     let appeared: Bool
     let appearDelay: Double
     let language: AppLanguage
+    let realFollowerCount: Int
     let onTap: () -> Void
 
     @State private var glowRotation: Double = 0
@@ -619,7 +622,7 @@ struct DeityImageCardView: View {
             HStack(spacing: 3) {
                 Image(systemName: "person.2.fill")
                     .font(.system(size: 8))
-                Text(formatCount(deity.followerCount))
+                Text(formatCount(realFollowerCount))
                     .font(.system(size: 9, weight: .medium))
             }
             .foregroundStyle(.white.opacity(0.3))

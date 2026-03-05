@@ -187,7 +187,7 @@ struct DarshanView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "person.2.fill")
                         .font(.system(size: 11))
-                    Text("\(formatFollowerCount(deity.followerCount)) \(loc.t(.followers))")
+                    Text("\(formatFollowerCount(appState.followerCount(for: deity.id))) \(loc.t(.followers))")
                         .font(.system(size: 12, weight: .medium))
                 }
                 .foregroundStyle(.white.opacity(0.4))
@@ -513,7 +513,7 @@ struct DarshanView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "person.2.fill")
                                 .font(.system(size: 10))
-                            Text(formatFollowerCount(deity.followerCount))
+                            Text(formatFollowerCount(appState.followerCount(for: deity.id)))
                                 .font(.system(size: 13, weight: .semibold))
                         }
                         .foregroundStyle(.white.opacity(0.6))

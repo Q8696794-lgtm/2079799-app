@@ -15,6 +15,8 @@ class AppState {
         }
     }
 
+    var followerService = CloudKitFollowerService()
+
     var primaryDeityID: DeityID? {
         selectedDeityIDs.first
     }
@@ -50,8 +52,30 @@ class AppState {
     }
 
     func selectDeities(_ ids: [DeityID]) {
+        let oldIDs = Set(selectedDeityIDs)
+        let newIDs = Set(ids)
+        let added = Array(newIDs.subtracting(oldIDs))
+        let removed = Array(oldIDs.subtracting(newIDs))
         selectedDeityIDs = ids
         hasCompletedOnboarding = true
+        Task {
+            if !removed.isEmpty {
+                await followerService.reportDeselection(removedIDs: removed)
+            }
+            if !added.isEmpty {
+                await followerService.reportSelection(deityIDs: added)
+            }
+        }
+    }
+
+    func loadFollowerCounts() {
+        Task {
+            await followerService.fetchAllCounts()
+        }
+    }
+
+    func followerCount(for deityID: DeityID) -> Int {
+        followerService.count(for: deityID)
     }
 
     func addPunya(_ points: Int) {
